@@ -77,17 +77,7 @@ function saveFile(filename, content) {
 
             fileWriter.onwriteend = function (e) {
                 //messageBox.innerHTML = 'File saved!';
-                new $.nd2Toast({
-                    message : "Nota agregada con exito",
-                    action : {
-                        title : "Ok",
-                        fn : function() {
-                            console.log("I am the function called by 'Pick phone...'");
-                        },
-                        color : "lime"
-                    },
-                    ttl : 3000
-                });
+                showToast('Nota agregada con exito');
             };
 
             fileWriter.onerror = function (e) {
@@ -136,25 +126,17 @@ function deleteFile(name) {
         filesystem.root.getFile(name+'.txt', {create: false}, function (fileEntry) {
 
             fileEntry.remove(function () {
-                new $.nd2Toast({
-                    message : "Nota eliminada con exito",
-                    action : {
-                        title : "Ok",
-                        fn : function() {
-                            console.log("I am the function called by 'Pick phone...'");
-                        },
-                        color : "red"
-                    },
-                    ttl : 3000
-                });
+                document.getElementById('note_'+name).remove();
+               showToast('Nota eliminada con exito');
             }, errorHandler);
 
         }, errorHandler);
     }, errorHandler);
+
 }
 
 function refreshNotes(name, content) {
-    genericNote = '<div class="nd2-card">' +
+    genericNote = '<div class="nd2-card" id="note_'+name+'">' +
         '<div class="card-title has-supporting-text">' +
         '<h3 class="card-primary-title">'+name+'</h3>' +
         //'<h5 class="card-subtitle">From Wikipedia, the free encyclopedia</h5>' +
@@ -166,7 +148,7 @@ function refreshNotes(name, content) {
         '<div class="row between-xs">' +
         '<div class="col-xs-12 align-right">' +
         '<div class="box">' +
-        '<a href="#" onclick="deleteFile('+name+')" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-delete"></i></a>' +
+        '<a href="#" onclick="deleteFile(\''+name+'\')" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-delete"></i></a>' +
         '<a href="#" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-edit"></i></a>' +
         '</div>' +
         '</div>' +
@@ -174,4 +156,18 @@ function refreshNotes(name, content) {
         '</div>' +
         '</div>';
     document.getElementById('main').innerHTML += genericNote;
+}
+
+function showToast(message){
+    new $.nd2Toast({
+        message : message,
+        action : {
+            title : "Ok",
+            fn : function() {
+                console.log("I am the function called by 'Pick phone...'");
+            },
+            color : "lime"
+        },
+        ttl : 3000
+    });
 }
