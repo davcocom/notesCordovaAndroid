@@ -1,6 +1,7 @@
 document.addEventListener("deviceready", deviceReady, false);
 var filesystem = null;
 var messageBox;
+var arrayNotes = new Array();
 
 function deviceReady() {
 
@@ -14,13 +15,14 @@ function deviceReady() {
     if (window.requestFileSystem) {
         initFileSystem();
         //alert("Si se pueden escribir archivos.");
-        leerArchivo();
+
     } else {
         alert("Sorry! Your browser doesn\'t support the FileSystem API :(");
     }
 
     //Visualize actual notes in device
-    refreshNotes();
+    // refreshNotes();
+    onInitFs();
 }
 
 // A simple error handler to be used throughout this demo.
@@ -46,7 +48,7 @@ function errorHandler(error) {
             message = 'Unknown Error UAY';
             break;
     }
-    alert(message);
+    showToast(message);
 }
 
 function pruebaArchivos() {
@@ -68,6 +70,7 @@ function initFileSystem() {
 
 
 function saveFile(filename, content) {
+
     filesystem.root.getFile(filename, {create: true}, function (fileEntry) {
 
         fileEntry.createWriter(function (fileWriter) {
@@ -93,15 +96,16 @@ function saveFile(filename, content) {
 function addNote() {
     var name = document.getElementById('noteTitle');
     var content = document.getElementById('noteContent');
-    saveFile(name.value+".txt", content.value);
-    refreshNotes(name.value, content.value);
+    arrayNotes.push(name.value);
+    saveFile(name.value + ".txt", content.value);
+    displayNote(name.value, content.value);
     name.value = "";
     content.value = "";
 };
 
-function leerArchivo() {
-
-    filesystem.root.getFile('prueba .txt', {}, function (fileEntry) {
+function readFile(name) {
+    var content = null;
+    filesystem.root.getFile(name + '.txt', {}, function (fileEntry) {
 
         // Get a File object representing the file,
         // then use FileReader to read its contents.
@@ -109,25 +113,23 @@ function leerArchivo() {
             var reader = new FileReader();
 
             reader.onloadend = function (e) {
-                var noteTest = document.getElementById('testNote');
-                noteTest.innerHTML = this.result;
-
+                content = String(this.result);
+                displayNote(name,content);
             };
-
             reader.readAsText(file);
+
         }, errorHandler);
 
     }, errorHandler);
-
 }
 
 function deleteFile(name) {
     window.requestFileSystem(window.TEMPORARY, 1024 * 1024, function () {
-        filesystem.root.getFile(name+'.txt', {create: false}, function (fileEntry) {
+        filesystem.root.getFile(name + '.txt', {create: false}, function (fileEntry) {
 
             fileEntry.remove(function () {
-                document.getElementById('note_'+name).remove();
-               showToast('Nota eliminada con exito');
+                document.getElementById('note_' + name).remove();
+                showToast('Nota eliminada con exito');
             }, errorHandler);
 
         }, errorHandler);
@@ -135,39 +137,94 @@ function deleteFile(name) {
 
 }
 
-function refreshNotes(name, content) {
-    genericNote = '<div class="nd2-card" id="note_'+name+'">' +
+function displayNote(name, content) {
+    var moreInfo = content.length > 140 ? '<a class="card-subtitle" href="#viewNote">Leer más</a>' : '';
+    content = content.substr(0,140) + '...';
+    genericNote = '<div class="nd2-card" id="note_' + name + '" >' +
         '<div class="card-title has-supporting-text">' +
-        '<h3 class="card-primary-title">'+name+'</h3>' +
-        //'<h5 class="card-subtitle">From Wikipedia, the free encyclopedia</h5>' +
+        '<h3 class="card-primary-title">' + name + '</h3>' +
+            moreInfo +
         '</div>' +
         '<div id="testNote" class="card-supporting-text has-action has-title">' +
-            content+
+        content +
         '</div>' +
         '<div class="card-action">' +
         '<div class="row between-xs">' +
         '<div class="col-xs-12 align-right">' +
         '<div class="box">' +
-        '<a href="#" onclick="deleteFile(\''+name+'\')" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-delete"></i></a>' +
-        '<a href="#" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-edit"></i></a>' +
+        '<a href="#confirmationDeleteDialog" onclick="setFileToDelete(\'' + name + '\')" data-rel="popup" data-position-to="window" data-transition="pop" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-delete"></i></a>' +
+        '<a href="#editNote" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-edit"></i></a>' +
         '</div>' +
         '</div>' +
         '</div>' +
         '</div>' +
         '</div>';
+
     document.getElementById('main').innerHTML += genericNote;
 }
 
-function showToast(message){
+function setFileToDelete(name){
+    document.getElementById('confirmationDelete').name = name;
+}
+
+function showToast(message) {
     new $.nd2Toast({
-        message : message,
-        action : {
-            title : "Ok",
-            fn : function() {
+        message: message,
+        action: {
+            title: "Ok",
+            fn: function () {
                 console.log("I am the function called by 'Pick phone...'");
             },
-            color : "lime"
+            color: "yellow"
         },
-        ttl : 3000
+        ttl: 3000
     });
 }
+
+function toArray(list) {
+    return Array.prototype.slice.call(list || [], 0);
+}
+
+function listResults(entries) {
+    // Document fragments can improve performance since they're only appended
+    // to the DOM once. Only one browser reflow occurs.
+    //var fragment = document.createDocumentFragment();
+
+    entries.forEach(function (entry, i) {
+        if (!entry.isDirectory) {
+            file = (entry.name).split('.');
+            if (file[1] == 'txt') {
+                readFile(file[0]);
+            }
+        }
+    });
+
+    //document.querySelector('#filelist').appendChild(fragment);
+}
+
+function onInitFs() {
+    setTimeout(mostrar, 500);
+
+
+}
+function mostrar() {
+    var dirReader = filesystem.root.createReader();
+    var entries = [];
+
+    // Call the reader.readEntries() until no more results are returned.
+    var readEntradas = function () {
+
+        dirReader.readEntries (function (results) {
+            if (!results.length) {
+                listResults(entries.sort());
+            } else {
+                entries = entries.concat(toArray(results));
+                readEntradas();
+            }
+        }, errorHandler);
+    };
+
+    readEntradas(); // Start reading dirs.
+}
+
+
