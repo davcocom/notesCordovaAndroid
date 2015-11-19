@@ -4,7 +4,6 @@ var messageBox;
 var arrayNotes = new Array();
 
 function deviceReady() {
-
     // Allow for vendor prefixes.
     window.requestFileSystem = window.requestFileSystem ||
         window.webkitRequestFileSystem;
@@ -51,16 +50,6 @@ function errorHandler(error) {
     showToast(message);
 }
 
-function pruebaArchivos() {
-    if (window.requestFileSystem) {
-        alert("Los archivos si son soportados");
-    } else {
-        alert("No se soportan el manejo de archivos :(");
-    }
-
-}
-
-
 function initFileSystem() {
     // Request a file system with the new size.
     window.requestFileSystem(window.PERSISTENT, 1024, function (fs) {
@@ -93,9 +82,9 @@ function saveFile(filename, content) {
     }, errorHandler);
 }
 
-function addNote() {
-    var name = document.getElementById('noteTitle');
-    var content = document.getElementById('noteContent');
+function addNote(titleID, contentID) {
+    var name = document.getElementById(titleID);
+    var content = document.getElementById(contentID);
     arrayNotes.push(name.value);
     saveFile(name.value + ".txt", content.value);
     displayNote(name.value, content.value);
@@ -123,6 +112,27 @@ function readFile(name) {
     }, errorHandler);
 }
 
+function setContentToID(name,id) {
+    var content = null;
+    filesystem.root.getFile(name + '.txt', {}, function (fileEntry) {
+
+        // Get a File object representing the file,
+        // then use FileReader to read its contents.
+        fileEntry.file(function (file) {
+            var reader = new FileReader();
+
+            reader.onloadend = function (e) {
+                content = String(this.result);
+                document.getElementById(id).innerHTML = content;
+            };
+            reader.readAsText(file);
+
+        }, errorHandler);
+
+    }, errorHandler);
+    return content;
+}
+
 function deleteFile(name) {
     window.requestFileSystem(window.TEMPORARY, 1024 * 1024, function () {
         filesystem.root.getFile(name + '.txt', {create: false}, function (fileEntry) {
@@ -138,7 +148,7 @@ function deleteFile(name) {
 }
 
 function displayNote(name, content) {
-    var moreInfo = content.length > 140 ? '<a class="card-subtitle" href="#viewNote">Leer más</a>' : '';
+    var moreInfo = content.length > 140 ? '<a onclick="setNoteToViewPage(\'' + name + '\')" class="card-subtitle" href="#viewNote">Leer más</a>' : '';
     content = content.substr(0,140) + '...';
     genericNote = '<div class="nd2-card" id="note_' + name + '" >' +
         '<div class="card-title has-supporting-text">' +
@@ -153,7 +163,7 @@ function displayNote(name, content) {
         '<div class="col-xs-12 align-right">' +
         '<div class="box">' +
         '<a href="#confirmationDeleteDialog" onclick="setFileToDelete(\'' + name + '\')" data-rel="popup" data-position-to="window" data-transition="pop" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-delete"></i></a>' +
-        '<a href="#editNote" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-edit"></i></a>' +
+        '<a href="#editNote" onclick="setNoteToEdit(\'' + name + '\')" class="ui-btn ui-btn-inline ui-btn-fab"><i class="zmdi zmdi-edit"></i></a>' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -163,8 +173,28 @@ function displayNote(name, content) {
     document.getElementById('main').innerHTML += genericNote;
 }
 
+function setNoteToViewPage(name){
+    document.getElementById('viewTitle').innerHTML = name;
+    setContentToID(name,'viewContent');
+}
+
 function setFileToDelete(name){
     document.getElementById('confirmationDelete').name = name;
+}
+
+function setNoteToEdit(name){
+    //set the note's content to a textArea
+    setContentToID(name,'editContent');
+    //Set the note's title to the text field
+    document.getElementById('editTitle').value = name;
+    //set the note's name to an anchor for making easier the edition
+    document.getElementById('saveEdition').name = name;
+}
+
+function saveEdition(name){
+    deleteFile(name);
+    addNote('editTitle', 'editContent');
+    showToast('Nota editada con éxito');
 }
 
 function showToast(message) {
@@ -204,9 +234,8 @@ function listResults(entries) {
 
 function onInitFs() {
     setTimeout(mostrar, 500);
-
-
 }
+
 function mostrar() {
     var dirReader = filesystem.root.createReader();
     var entries = [];
@@ -226,5 +255,3 @@ function mostrar() {
 
     readEntradas(); // Start reading dirs.
 }
-
-

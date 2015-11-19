@@ -76,7 +76,8 @@
         </div>
 
         <div data-role="content">
-            <a href="dialog/index.html" id="confirmationDelete" onclick="deleteFile(this.name)" data-rel="back" data-role="button" data-inline="true"
+            <a href="dialog/index.html" id="confirmationDelete" onclick="deleteFile(this.name)" data-rel="back"
+               data-role="button" data-inline="true"
                class="ui-btn ui-btn-primary"><i
                     class='zmdi zmdi-delete'></i> Eliminar!</a>
 
@@ -96,7 +97,7 @@
             <input type="text" id="noteTitle" placeholder="Titulo" data-clear-btn="true">
             <textarea name="newNote" id="noteContent" cols="30" rows="10" placeholder="Contenido"></textarea>
 
-            <a href="dialog/index.html" onclick="addNote()" data-rel="back" data-role="button" data-inline="true"
+            <a href="dialog/index.html" onclick="addNote('noteTitle', 'noteContent')" data-rel="back" data-role="button" data-inline="true"
                class="ui-btn ui-btn-primary"><i
                     class='zmdi zmdi-check'></i> Agregar</a>
 
@@ -119,12 +120,14 @@
 
             <div class="card-title has-supporting-text">
                 <div class="card-primary-title box col-xs-12 col-sm-6 col-md-4">
-                    <input value="Biomaterial" type="text" data-clear-btn="true">
+                    <label for="edittitle">Título</label>
+                    <input id="editTitle" type="text" data-clear-btn="true">
                 </div>
             </div>
 
             <div class="card-supporting-text has-action has-title">
-                <textarea name="" id="" cols="30" rows="10">A biomaterial is any matter, surface, or construct that interacts with biological systems. As a science, biomaterials is about fifty years old. The study of biomaterials is called biomaterials science. It has experienced steady and strong growth over its history, with many companies investing large amounts of money into the development of new products.
+                <label for="editContent">Contenido</label>
+                <textarea name="" id="editContent" cols="30" rows="10">
                 </textarea>
             </div>
 
@@ -132,7 +135,7 @@
                 <div class="row between-xs">
                     <div class="col-xs-12">
                         <div class="box align-center">
-                            <a href="dialog/index.html" data-rel="back" data-role="button"
+                            <a href="dialog/index.html" onclick="saveEdition(this.name)" id="saveEdition" data-rel="back" data-role="button"
                                class="ui-btn ui-btn-inline ui-btn-primary"><i
                                     class='zmdi zmdi-save'></i> Guardar</a>
                             <a href="dialog/index.html" data-rel="back" data-role="button"
@@ -151,20 +154,20 @@
     <div class="nd2-card">
 
         <div class="card-title has-supporting-text">
-            <h3 class="card-primary-title">Biomaterial</h3>
-            <h5 class="card-subtitle">From Wikipedia, the free encyclopedia</h5>
+            <h3 id="viewTitle" class="card-primary-title">
+
+            </h3>
         </div>
 
-        <div class="card-supporting-text has-action has-title">
-            A biomaterial is any matter, surface, or construct that interacts with biological systems. As a science, biomaterials is about fifty years old. The study of biomaterials is called biomaterials science. It has experienced steady and strong growth over its history, with many companies investing large amounts of money into the development of new products.
+        <div id="viewContent" class="card-supporting-text has-action has-title">
+
         </div>
 
         <div class="card-action">
             <div class="row between-xs">
                 <div class="col-xs-12">
                     <div class="box">
-                        <a href="#" class="ui-btn ui-btn-inline">Applause</a>
-                        <a href="#" class="ui-btn ui-btn-inline">Boooh</a>
+                        <a href="#" data-rel="back" data-role="button" class="ui-btn ui-btn-inline">Regresar</a>
                     </div>
                 </div>
             </div>
